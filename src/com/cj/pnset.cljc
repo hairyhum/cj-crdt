@@ -31,9 +31,6 @@
 (defn remove
   [pnset value] (update-dt pnset [:remove value]))
 
-(defn union
-  [our their] (merge-dt our their))
-
 (defn contains?
   [pnset value] (#'clojure.core/contains? (query-dt pnset) value))
 
