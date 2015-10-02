@@ -16,12 +16,31 @@
 (defn new [actor]
   (Data. (orswot/new actor) (orswot/new actor)))
 
+(defn add-list [data list]
+  (update :lists data orswot/add list))
+
 (defn get-list [data id]
-  (orswot/get id (:lists (query-dt data))))
-
-(defn get-unique-item [data id]
-  (orswot/get id (:unique-items (query-dt data))))
-
+  (orswot/get (:lists (query-dt data)) id))
 
 (defn update-list [data id new-list]
   (update :lists data orswot/update id new-list))
+
+(defn remove-list [data id]
+  (update :lists data orswot/remove (get-list data id)))  
+
+(defn update-list-with [data id fun & args]
+  (update :lists data orswot/update id (apply fun (get-list id) args)))
+
+(defn add-unique-item [data unique-item]
+  (update :unique-items data orswot/add unique-item))
+
+(defn get-unique-item [data id]
+  (orswot/get (:unique-items (query-dt data)) id))
+
+(defn update-unique-item [data id unique-item]
+  (update :unique-items data orswot/update id unique-item))
+
+(defn remove-unique-item [data id]
+  (update :unique-items data orswot/remove (get-unique-item data id)))  
+
+

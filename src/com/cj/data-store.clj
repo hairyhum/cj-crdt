@@ -22,7 +22,7 @@
 (def *sync-timeout* 60)
 (def *sync-server-url* "localhost:8080")
 
-(create-data-command :sync (fn [old-data new-data] data/merge))
+(create-data-command :sync data/merge)
 
 (defn set-interval
   [f time-in-ms]
@@ -64,9 +64,41 @@
 
 (def *sync-server-interval* (set-interval sync-server *sync-timeout*))
 
-; (create-data-command :update-item-title 
-;   (fn [data item title & o]
-;     (let [list-id (:list-id item)
-;           old-list (data/get-list data list-id)
-;           new-list (list/update-item old-list (item/update-title item))]
-;       (data/update-list data list-id new-list))))
+(create-data-command :add-list data/add-list)
+
+(create-data-command :remove-list data/remove-list)
+
+(create-data-command :add-unique-item data/add-unique-item)
+
+(create-data-command :remove-unique-item 
+  ; TODO: items delete
+  data/remove-unique-item)
+
+(create-data-command :update-list-name
+  (fn [data list-id name]
+    (data/update-list data list-id
+      (list/update-name (data/get-list data list-id) name))))
+
+(create-data-command :update-unique-item
+  (fn [data unique-item]
+    (data update-unique-item data (:id unique-item) unique-item)))
+
+(create-data-command :add-unique-item
+  ; TODO: add unique item
+  (fn [data list-id item]
+    (let [list (data/get-list data list-id)]
+      (data/update-list data list-id (list/add-item item)))))
+
+(create-data-command :update-item
+  (fn [data list-id item]
+    (data/update-list-with data list-id list/update-item item)))
+
+(create-data-command :remove-item
+  (fn [data list-id item]
+    (data/update-list-with data list-id list/remove-item item)))
+
+(create-data-command :add-item
+  ; TODO: add unique item
+  (fn [data list-id item]
+    (data/update-list-with data list-id list/add-item item)))
+
