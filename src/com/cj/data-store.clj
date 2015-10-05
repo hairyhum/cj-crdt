@@ -22,8 +22,6 @@
 (def *sync-timeout* 60)
 (def *sync-server-url* "localhost:8080")
 
-(create-data-command :sync data/merge)
-
 (defn set-interval
   [f time-in-ms]
   (let [stop (chan)]
@@ -62,17 +60,27 @@
           (do (println error) (close! channel))
           (>! channel (json/read-json body)))))))
 
-(def *sync-server-interval* (set-interval sync-server *sync-timeout*))
+(def *sync-server-interval* nil)
 
+(defn start-sync []
+  (set! *sync-server-interval* (set-interval sync-server *sync-timeout*)))
+
+(create-data-command :sync data/merge)
+
+; (command :add-list list)
 (create-data-command :add-list data/add-list)
 
+; (command :remove-list list-id)
 (create-data-command :remove-list data/remove-list)
 
+; (command :add-unique-item unique-item)
 (create-data-command :add-unique-item data/add-unique-item)
 
+; (command :remove-unique-item unique-item-id)
 (create-data-command :remove-unique-item 
   ; TODO: items delete
   data/remove-unique-item)
+
 
 (create-data-command :update-list-name
   (fn [data list-id name]
