@@ -64,7 +64,7 @@
   {:pre (contains-item? list item)}
   (update list :bought pnset/add item))
 
-(defn del-item
+(defn remove-item
   [list item]
   {:pre (contains-item? list item)}
   (let [new-items  (pnset/remove (:items list) item)
@@ -79,13 +79,13 @@
 (defn unbuy-item
   [list item]
   {:pre (contains-bought? list item)}
-  (add-item (del-item list item) (copy-item item)))
+  (add-item (remove-item list item) (copy-item item)))
 
 (defn update-item
   [list item]
   {:pre (contains-item? list item)}
   (let [new-item (copy-item item)
-        without-item (del-item list item)
+        without-item (remove-item list item)
         with-item (add-item without-item new-item)]
     (if (contains-bought? list item)
       (buy-item with-item new-item)

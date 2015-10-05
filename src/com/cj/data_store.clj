@@ -1,26 +1,28 @@
 (ns com.cj.data-store
   (require [com.cj.data :as data]
            [com.cj.commands :as commands]
-           [org.httpkit.client :as http-client])
-  (use [clojure.core.async]))
+           [com.cj.list :as list]
+           [org.httpkit.client :as http-client]
+           [clojure.data.json :as json])
+  (use [clojure.core.async :only (go go-loop chan >! <! close! alt! timeout thread)]))
 
 (defn log-agent-error [a exception]
   (println exception))
 
-(def *data-store* (agent (data/new :actor) :error-handler log-agent-error))
+(def *data-store (agent (data/new :actor) :error-handler log-agent-error))
 
-(def *ui-channel* (chan))
+(def *ui-channel (chan))
 
-(add-watch *data-store* :notify-ui 
+(add-watch *data-store :notify-ui 
   (fn [key reference old-state new-state]
-    (go (>! *ui-channel* new-state))))
+    (go (>! *ui-channel new-state))))
 
 (defn create-data-command [key fun]
   (commands/create-command key (fn [ & args]
-    (apply send *data-store* fun args))))
+    (apply send *data-store fun args))))
 
-(def *sync-timeout* 60)
-(def *sync-server-url* "localhost:8080")
+(def *sync-timeout 60)
+(def *sync-server-url "localhost:8080")
 
 (defn set-interval
   [f time-in-ms]
@@ -32,18 +34,9 @@
         stop :stop))
     stop))
 
-(defn sync-server []
-  (go
-    (let [request-channel (chan 1)]
-      (async-put (json/json-str (deref *data-store*)) request-channel)
-      (if (= :ok (<! request-channel))
-        (do
-          (async-get request-channel)
-          (command :sync (<! request-channel)))))))
-
 (defn async-put [data channel]
   (http-client/put
-    *sync-server-url*
+    *sync-server-url
     {:body data}
     (fn [{:keys [status headers body error]}]
       (go 
@@ -53,17 +46,26 @@
 
 (defn async-get [channel]
   (http-client/get
-    *sync-server-url*
+    *sync-server-url
     (fn [{:keys [status headers body error]}]
       (go
         (if error
           (do (println error) (close! channel))
           (>! channel (json/read-json body)))))))
 
+(defn sync-server []
+  (go
+    (let [request-channel (chan 1)]
+      (async-put (json/json-str (deref *data-store)) request-channel)
+      (if (= :ok (<! request-channel))
+        (do
+          (async-get request-channel)
+          (commands/command :sync (<! request-channel)))))))
+
 (def *sync-server-interval* nil)
 
 (defn start-sync []
-  (set! *sync-server-interval* (set-interval sync-server *sync-timeout*)))
+  (set! *sync-server-interval* (set-interval sync-server *sync-timeout)))
 
 (create-data-command :sync data/merge)
 
@@ -89,7 +91,7 @@
 
 (create-data-command :update-unique-item
   (fn [data unique-item]
-    (data update-unique-item data (:id unique-item) unique-item)))
+    (data/update-unique-item data (:id unique-item) unique-item)))
 
 (create-data-command :add-unique-item
   ; TODO: add unique item

@@ -1,4 +1,5 @@
 (ns com.cj.crmap
+  (:refer-clojure :exclude [remove get update])
   (:require [com.cj.orswot :as orswot])
   (:use [com.cj.crdt]))
 
@@ -21,7 +22,7 @@
   (merge-dt [our their]
     (let [new-structure (merge-dt (:structure our) (:structure their))
           new-data (select-keys (merge (:data our) (:data their)) (query-dt new-structure))]
-      (assoc crmap :structure structure :data new-data))))
+      (assoc our :structure structure :data new-data))))
 
 
 (defn new [actor] (CRMap. (orswot/new actor) {}))
@@ -34,5 +35,5 @@
 
 ; Clean update value only. Error if not added yet.
 (defn update [crmap id new-value]
-  {:pre (get crmap id)}
-  (update crmap :data assoc id new-value))
+  {:pre (id crmap)}
+  (clojure.core/update crmap :data assoc id new-value))

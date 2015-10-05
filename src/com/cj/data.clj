@@ -1,4 +1,5 @@
 (ns com.cj.data
+  (:refer-clojure :exclude [merge])
   (:require [com.cj.crmap :as crmap]
            [com.cj.crdt :as crdt])
   (:use [com.cj.crdt]))
@@ -45,4 +46,4 @@
 (defn remove-unique-item [data id]
   (update :unique-items data crmap/remove (get-unique-item data id)))  
 
-
+(defn merge [our their] (merge-dt our their))

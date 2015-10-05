@@ -1,5 +1,5 @@
 (ns com.cj.commands
-  (:use [clojure.core.async]))
+  (:use [clojure.core.async :only (go go-loop >! <! chan close!)]))
 
 (def *commands* (atom {}))
 

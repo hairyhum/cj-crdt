@@ -1,5 +1,5 @@
 (ns com.cj.orswot
-  (:refer-clojure :exclude [remove])
+  (:refer-clojure :exclude [remove contains?])
   (:require [com.cj.vv :as vv])
   (:use [com.cj.crdt]))
 
@@ -24,13 +24,13 @@
                 (let [their-val (get (:data their) key)]
                   (if their-val
                     (assoc acc key (vv/merge val their-val))
-                    (if (dot-greater val (:version their))
+                    (if (vv/dot-greater? val (:version their))
                       (assoc acc key val)
                       acc)))))
           their-data (reduce-kv (fn [acc key val]
                   (if (get (:data our) key)
                     acc
-                    (if (dot-greater val (:version our))
+                    (if (vv/dot-greater? val (:version our))
                       (assoc acc key val)
                       acc))))]
           (assoc our :data (merge our-data their-data) :version new-version))))
@@ -45,4 +45,4 @@
   (update-dt orswot [:remove value]))
 
 (defn contains? [orswot value]
-  (core/contains? (query-dt orswot) value))
+  (clojure.core/contains? (query-dt orswot) value))

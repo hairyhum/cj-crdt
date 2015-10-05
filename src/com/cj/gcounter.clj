@@ -1,9 +1,9 @@
-(ns com.cj.counter
-  (require [com.cj.vv :as vv]))
+(ns com.cj.gcounter
+  (:refer-clojure :exclude [inc dec])
+  (:require [com.cj.vv :as vv])
+  (:use [com.cj.crdt]))
 
-(use '[com.cj.crdt :only (StateCRDT)])
-
-(defrecord Counter [actor payload]
+(defrecord GCounter [actor payload]
   StateCRDT
   (query-dt [counter]
     (vv/summ-all (:payload counter)))
@@ -13,14 +13,14 @@
   (merge-dt [our their]
     (update our :payload vv/merge (:payload their))))
 
-(defn new-counter
-  ([] (new-counter ::default-actor 0))
+(defn new
   ([actor i] 
-    (Counter. actor
-              (vv/new {actor i}))))
+    (GCounter. actor
+              (vv/new {actor i})))
+  ([] (com.cj.gcounter/new :default-actor 0)))
 
-(defn increment-counter [counter value]
+(defn inc [counter value]
   (update counter value))
 
-(defn decrement-counter [counter value]
+(defn dec [counter value]
   (update counter (- value)))
